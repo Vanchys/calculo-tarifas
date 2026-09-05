@@ -1,0 +1,12 @@
+# Documentación interna
+CLAUDE.md
+
+# Archivos de reglas e instrucciones del usuario
+reglas universales codigo*.txt
+*reglas*.txt
+
+# Archivos del sistema y entorno
+.env
+*.log
+.DS_Store
+Thumbs.db
