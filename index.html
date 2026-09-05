@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calculadora de Tarifas</title>
+
+  <!-- PWA: Manifiesto, tema e iconos -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f1117">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tarifas">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
   <style>
     /* ── Reset y base ── */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -21,9 +32,27 @@
     h1 {
       text-align: center;
       font-size: 1.4rem;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       color: #f8fafc;
     }
+
+    /* ── Botón de instalación PWA ── */
+    .btn-install {
+      display: none; /* Se muestra solo si Chrome permite instalación */
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 16px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .btn-install:active { transform: scale(0.98); }
 
     /* ── Input de kilómetros ── */
     .input-group {
@@ -131,6 +160,9 @@
 <body>
   <div class="container">
     <h1>🚕 Calculadora de Tarifas</h1>
+
+    <!-- Botón para instalar PWA directamente -->
+    <button id="installBtn" class="btn-install">📲 Instalar aplicación en el dispositivo</button>
 
     <!-- Campo de entrada -->
     <div class="input-group">
@@ -471,6 +503,52 @@ function hideAll() {
   setCardsDiscardedState(false);
   divForanea.classList.remove('visible');
 }
+
+// ═════════════════════════════════════
+//  SOPORTE DE PWA / INSTALACIÓN
+// ═════════════════════════════════════
+
+// Registro del Service Worker para soporte offline e instalación
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => {
+      console.error('Error registrando Service Worker:', err);
+    });
+  });
+}
+
+// Capturar evento de instalación de Google Chrome
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevenir que Chrome muestre el banner por defecto
+  e.preventDefault();
+  deferredPrompt = e;
+  // Mostrar nuestro botón personalizado
+  if (installBtn) {
+    installBtn.style.display = 'block';
+  }
+});
+
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        installBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    }
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if (installBtn) {
+    installBtn.style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
