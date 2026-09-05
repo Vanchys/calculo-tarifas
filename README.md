@@ -32,6 +32,15 @@ A partir de los 17.01 km, las tarifas urbanas quedan automáticamente **descarta
 
 ---
 
+## 📱 Aplicación Instalable (PWA)
+La aplicación está configurada como una **Progressive Web App (PWA)**:
+- Se puede instalar directamente en la pantalla de inicio desde **Google Chrome** en celular y computadora.
+- Funciona **sin conexión a internet (offline)** gracias al Service Worker integrado.
+- Abre a pantalla completa con aspecto nativo.
+
+---
+
 ## 🛠️ Tecnologías
-- **HTML5 / CSS3**: Diseño responsivo y temas con modo oscuro.
-- **Vanilla JavaScript**: Lógica de cálculo directo sin dependencias externas.
+- **HTML5 / CSS3**: Diseño responsivo para celular, tablet y escritorio con tema oscuro.
+- **Vanilla JavaScript**: Lógica de cálculo directo e interpolación sin librerías externas.
+- **PWA**: Web App Manifest (`manifest.json`) y Service Worker (`sw.js`).
