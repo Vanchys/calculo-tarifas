@@ -135,7 +135,7 @@
     <!-- Campo de entrada -->
     <div class="input-group">
       <label for="kmInput">Kilómetros del viaje</label>
-      <input type="number" id="kmInput" placeholder="Ej: 8.5" min="0" max="200" step="0.1" inputmode="decimal">
+      <input type="number" id="kmInput" placeholder="Ej: 4.05" min="0" max="200" step="any" inputmode="decimal">
     </div>
 
     <!-- Resultados -->
@@ -194,61 +194,58 @@
   </div>
 
 <script>
-// ── Configuración de tarifas fijas y topes base de empalme ──
+// ── Configuración de tarifas fijas y puntos de calibración continua ──
 const urbanConfigs = {
   day: {
     label: 'día',
+    subMinPrice: 34,
+    stdMinPrice: 39,
     baseKm: 7.2,
     basePrice: 94,
     ratePerKm: 13,
-    table: [
-      [0.0, 1.3, 34], [1.31, 1.7, 39],
-      [1.8, 1.8, 40], [1.9, 1.9, 41], [2.0, 2.0, 42], [2.1, 2.1, 43],
-      [2.2, 2.2, 44], [2.3, 2.3, 45], [2.4, 2.4, 46], [2.5, 2.5, 47],
-      [2.6, 2.6, 48], [2.7, 2.7, 49], [2.8, 2.8, 50], [2.9, 2.9, 51],
-      [3.0, 3.0, 52], [3.1, 3.1, 53], [3.2, 3.2, 54], [3.3, 3.3, 55],
-      [3.4, 3.4, 56], [3.5, 3.5, 57], [3.6, 3.6, 58], [3.7, 3.7, 59],
-      [3.8, 3.8, 60], [3.9, 3.9, 61], [4.0, 4.0, 62], [4.1, 4.1, 63],
-      [4.2, 4.2, 64], [4.3, 4.3, 65], [4.4, 4.4, 66], [4.5, 4.5, 67],
-      [4.6, 4.6, 68], [4.7, 4.7, 69], [4.8, 4.8, 70], [4.9, 4.9, 71],
-      [5.0, 5.0, 72], [5.1, 5.1, 73], [5.2, 5.2, 74], [5.3, 5.3, 75],
-      [5.4, 5.4, 76], [5.5, 5.5, 77], [5.6, 5.6, 78], [5.7, 5.7, 79],
-      [5.8, 5.8, 80], [5.9, 5.9, 81], [6.0, 6.0, 82], [6.1, 6.1, 83],
-      [6.2, 6.2, 84], [6.3, 6.3, 85], [6.4, 6.4, 86], [6.5, 6.5, 87],
-      [6.6, 6.6, 88], [6.7, 6.7, 89], [6.8, 6.8, 90], [6.9, 6.9, 91],
-      [7.0, 7.0, 92], [7.1, 7.1, 93], [7.2, 7.2, 94]
+    // Puntos de calibración [km, precio] de la tabla oficial
+    points: [
+      [1.7, 39], [1.8, 40], [1.9, 41], [2.0, 2.0, 42], [2.1, 43], [2.2, 44],
+      [2.3, 45], [2.4, 46], [2.5, 47], [2.6, 48], [2.7, 49], [2.8, 50],
+      [2.9, 51], [3.0, 52], [3.1, 53], [3.2, 54], [3.3, 55], [3.4, 56],
+      [3.5, 57], [3.6, 58], [3.7, 59], [3.8, 60], [3.9, 61], [4.0, 62],
+      [4.1, 63], [4.2, 64], [4.3, 65], [4.4, 66], [4.5, 67], [4.6, 68],
+      [4.7, 69], [4.8, 70], [4.9, 71], [5.0, 72], [5.1, 73], [5.2, 74],
+      [5.3, 75], [5.4, 76], [5.5, 77], [5.6, 78], [5.7, 79], [5.8, 80],
+      [5.9, 81], [6.0, 82], [6.1, 83], [6.2, 84], [6.3, 85], [6.4, 86],
+      [6.5, 87], [6.6, 88], [6.7, 89], [6.8, 90], [6.9, 91], [7.0, 92],
+      [7.1, 93], [7.2, 94]
     ]
   },
   night: {
     label: 'noche',
+    subMinPrice: 37,
+    stdMinPrice: 42,
     baseKm: 4.9,
     basePrice: 74,
     ratePerKm: 15,
-    table: [
-      [0.0, 1.3, 37], [1.31, 1.7, 42],
-      [1.8, 1.8, 43], [1.9, 1.9, 44], [2.0, 2.0, 45], [2.1, 2.1, 46],
-      [2.2, 2.2, 47], [2.3, 2.3, 48], [2.4, 2.4, 49], [2.5, 2.5, 50],
-      [2.6, 2.6, 51], [2.7, 2.7, 52], [2.8, 2.8, 53], [2.9, 2.9, 54],
-      [3.0, 3.0, 55], [3.1, 3.1, 56], [3.2, 3.2, 57], [3.3, 3.3, 58],
-      [3.4, 3.4, 59], [3.5, 3.5, 60], [3.6, 3.6, 61], [3.7, 3.7, 62],
-      [3.8, 3.8, 63], [3.9, 3.9, 64], [4.0, 4.0, 65], [4.1, 4.1, 66],
-      [4.2, 4.2, 67], [4.3, 4.3, 68], [4.4, 4.4, 69], [4.5, 4.5, 70],
-      [4.6, 4.6, 71], [4.7, 4.7, 72], [4.8, 4.8, 73], [4.9, 4.9, 74]
+    points: [
+      [1.7, 42], [1.8, 43], [1.9, 44], [2.0, 45], [2.1, 46], [2.2, 47],
+      [2.3, 48], [2.4, 49], [2.5, 50], [2.6, 51], [2.7, 52], [2.8, 53],
+      [2.9, 54], [3.0, 55], [3.1, 56], [3.2, 57], [3.3, 58], [3.4, 59],
+      [3.5, 60], [3.6, 61], [3.7, 62], [3.8, 63], [3.9, 64], [4.0, 65],
+      [4.1, 66], [4.2, 67], [4.3, 68], [4.4, 69], [4.5, 70], [4.6, 71],
+      [4.7, 72], [4.8, 73], [4.9, 74]
     ]
   },
   dawn: {
     label: 'madrugada',
+    subMinPrice: 40,
+    stdMinPrice: 45,
     baseKm: 4.1,
     basePrice: 70,
     ratePerKm: 17,
-    table: [
-      [0.0, 1.3, 40], [1.31, 1.7, 45],
-      [1.8, 1.8, 46], [1.9, 1.9, 47], [2.0, 2.0, 48], [2.1, 2.1, 49],
-      [2.2, 2.2, 50], [2.3, 2.3, 51], [2.4, 2.4, 52], [2.5, 2.5, 53],
-      [2.6, 2.6, 54], [2.7, 2.7, 55], [2.8, 2.8, 56], [2.9, 2.9, 57],
-      [3.0, 3.0, 58], [3.1, 3.1, 59], [3.2, 3.2, 60], [3.3, 3.3, 61],
-      [3.4, 3.4, 62], [3.5, 3.5, 63], [3.6, 3.6, 64], [3.7, 3.7, 65],
-      [3.8, 3.8, 66], [3.9, 3.9, 67], [4.0, 4.0, 68], [4.1, 4.1, 70]
+    points: [
+      [1.7, 45], [1.8, 46], [1.9, 47], [2.0, 48], [2.1, 49], [2.2, 50],
+      [2.3, 51], [2.4, 52], [2.5, 53], [2.6, 54], [2.7, 55], [2.8, 56],
+      [2.9, 57], [3.0, 58], [3.1, 59], [3.2, 60], [3.3, 61], [3.4, 62],
+      [3.5, 63], [3.6, 64], [3.7, 65], [3.8, 66], [3.9, 67], [4.0, 68],
+      [4.1, 70]
     ]
   }
 };
@@ -267,35 +264,58 @@ const foraneaRanges = [
 // ═════════════════════════════════════
 
 /**
- * Calcula la tarifa urbana (0.0 a 17.0 km) aplicando:
- * 1. Tabla fija oficial hasta su base
- * 2. Cálculo por km adicional desde la base hasta 17.0 km
+ * Formatea un número de km para mostrar sin decimales innecesarios
+ */
+function formatKm(km) {
+  return Number(km.toFixed(2)).toString();
+}
+
+/**
+ * Calcula la tarifa urbana continua de 0.0 a 17.0 km con interpolación peso a peso
  */
 function lookupUrbanRateByConfig(config, km) {
-  const rounded = Math.round(km * 10) / 10; // redondear a 1 decimal
+  // 1. Sub-mínimo (0.0 - 1.30 km)
+  if (km <= 1.3) {
+    return {
+      price: config.subMinPrice,
+      desc: `Sub-mínimo (0.0 – 1.3 km)`
+    };
+  }
 
-  // 1. Si está dentro de la tabla fija oficial
-  if (rounded <= config.baseKm) {
-    for (const [lo, hi, price] of config.table) {
-      if (rounded >= lo && rounded <= hi) {
-        let desc = '';
-        if (hi <= 1.3) desc = `Sub-mínimo (0.0 – 1.3 km)`;
-        else if (hi <= 1.7) desc = `Mínimo estándar (1.31 – 1.7 km)`;
-        else desc = `Tarifa ${config.label} (tabla fija a ${rounded} km)`;
-        return { price, desc };
+  // 2. Mínimo estándar (1.31 - 1.70 km)
+  if (km <= 1.7) {
+    return {
+      price: config.stdMinPrice,
+      desc: `Mínimo estándar (1.31 – 1.7 km)`
+    };
+  }
+
+  // 3. Tabla fija continua con interpolación lineal (1.7 km hasta baseKm)
+  if (km <= config.baseKm) {
+    const points = config.points;
+    for (let i = 0; i < points.length - 1; i++) {
+      const [km1, p1] = [points[i][0], points[i][points[i].length - 1]];
+      const [km2, p2] = [points[i + 1][0], points[i + 1][points[i + 1].length - 1]];
+      if (km >= km1 && km <= km2) {
+        const ratio = (km2 === km1) ? 0 : (km - km1) / (km2 - km1);
+        const interpolated = p1 + ratio * (p2 - p1);
+        const finalPrice = Math.round(interpolated);
+        return {
+          price: finalPrice,
+          desc: `Tarifa ${config.label} (tabla fija a ${formatKm(km)} km)`
+        };
       }
     }
   }
 
-  // 2. Si supera el tope base de tabla fija y llega hasta 17.0 km
-  if (rounded > config.baseKm && rounded <= 17.0) {
-    const extraKm = Math.round((rounded - config.baseKm) * 10) / 10;
-    const extraCost = Math.round(extraKm * config.ratePerKm);
-    const totalPrice = config.basePrice + extraCost;
+  // 4. Cálculo por km continuo desde baseKm hasta 17.0 km (peso por peso)
+  if (km > config.baseKm && km <= 17.0) {
+    const extraKm = km - config.baseKm;
+    const totalPrice = Math.round(config.basePrice + extraKm * config.ratePerKm);
 
     return {
       price: totalPrice,
-      desc: `Tarifa ${config.label}: $${config.basePrice} (base ${config.baseKm} km) + ${extraKm.toFixed(1)} km a $${config.ratePerKm}/km`
+      desc: `Tarifa ${config.label}: $${config.basePrice} (base ${config.baseKm} km) + ${formatKm(extraKm)} km a $${config.ratePerKm}/km`
     };
   }
 
@@ -313,7 +333,7 @@ function lookupForaneaRate(km) {
       return {
         price: total,
         name: range.name,
-        desc: `${km} km × $${range.pricePerKm}/km = $${total} MXN\nRango: ${range.min} – ${range.max} km`
+        desc: `${formatKm(km)} km × $${range.pricePerKm}/km = $${total} MXN\nRango: ${range.min} – ${range.max} km`
       };
     }
   }
@@ -360,7 +380,7 @@ function calculate() {
   }
 
   emptyMsg.style.display = 'none';
-  const km = Math.round(val * 10) / 10;
+  const km = val;
 
   // ── Tarifas urbanas activas (0 – 17 km) ──
   if (km <= 17.0) {
