@@ -95,6 +95,15 @@
     .card-dawn { background: linear-gradient(135deg, #2a1a3e, #1a1130); border-left: 4px solid #c084fc; }
     .card-foranea { background: linear-gradient(135deg, #1a3333, #112222); border-left: 4px solid #34d399; }
 
+    /* ── Tarjetas de tarifa con lluvia: mismo color base, borde punteado celeste ── */
+    .card-lluvia {
+      border-style: dashed;
+      border-left-width: 4px;
+      border-top: 1px dashed #38bdf8;
+      border-right: 1px dashed #38bdf8;
+      border-bottom: 1px dashed #38bdf8;
+    }
+
     .card-header {
       display: flex;
       justify-content: space-between;
@@ -221,6 +230,40 @@
           <span class="card-price" id="priceDawn">—</span>
         </div>
         <p class="card-desc" id="descDawn"></p>
+      </div>
+
+      <!-- Separador de tarifas con lluvia -->
+      <div class="divider" id="divLluvia">── ☔ Tarifas con lluvia ──</div>
+
+      <!-- Tarjetas de tarifas con recargo de lluvia (Día, Noche, Madrugada) -->
+      <div class="card card-day card-lluvia" id="cardDayLluvia">
+        <div class="card-header">
+          <div>
+            <span class="card-title">☔🌞 Día con lluvia</span>
+          </div>
+          <span class="card-price" id="priceDayLluvia">—</span>
+        </div>
+        <p class="card-desc" id="descDayLluvia"></p>
+      </div>
+
+      <div class="card card-night card-lluvia" id="cardNightLluvia">
+        <div class="card-header">
+          <div>
+            <span class="card-title">☔🌙 Noche con lluvia</span>
+          </div>
+          <span class="card-price" id="priceNightLluvia">—</span>
+        </div>
+        <p class="card-desc" id="descNightLluvia"></p>
+      </div>
+
+      <div class="card card-dawn card-lluvia" id="cardDawnLluvia">
+        <div class="card-header">
+          <div>
+            <span class="card-title">☔🌌 Madrugada con lluvia</span>
+          </div>
+          <span class="card-price" id="priceDawnLluvia">—</span>
+        </div>
+        <p class="card-desc" id="descDawnLluvia"></p>
       </div>
     </div>
   </div>
@@ -355,6 +398,61 @@ function lookupUrbanRateByConfig(config, km) {
 }
 
 /**
+ * Calcula el precio de un horario urbano con el recargo por lluvia aplicado.
+ * Reglas acordadas: sub-mínimo +$3, mínimo estándar +$4, y desde 1.7 km
+ * en adelante (tabla fija y cálculo por km) +$1 cada 0.5 km acumulado
+ * desde 1.7 km, equivalente a +$2/km. Solo aplica de 0 a 17 km: a partir
+ * de ahí ya no hay tarifas de ciudad y el foráneo no tiene recargo.
+ */
+function lookupUrbanRateWithRain(config, km) {
+  // 1. Sub-mínimo (0.0 - 1.3 km)
+  if (km <= 1.3) {
+    return {
+      price: config.subMinPrice + 3,
+      desc: `Sub-mínimo (0.0 – 1.3 km) + $3 lluvia`
+    };
+  }
+
+  // 2. Mínimo estándar (1.31 - 1.7 km)
+  if (km <= 1.7) {
+    return {
+      price: config.stdMinPrice + 4,
+      desc: `Mínimo estándar (1.31 – 1.7 km) + $4 lluvia`
+    };
+  }
+
+  // Recargo acumulado: +$1 cada 0.5 km desde 1.7 km (mismo peso en tabla y por-km)
+  const rainSurcharge = (kmValue) => Math.floor((kmValue - 1.7) / 0.5 + 1e-9) + 1;
+
+  // 3. Tabla fija continua con interpolación (1.7 km hasta baseKm)
+  if (km <= config.baseKm) {
+    const base = lookupUrbanRateByConfig(config, km);
+    const surcharge = rainSurcharge(km);
+    return {
+      price: base.price + surcharge,
+      desc: `Tarifa ${config.label} (tabla fija a ${formatKm(km)} km) + $${surcharge} lluvia`
+    };
+  }
+
+  // 4. Cálculo por km continuo desde baseKm hasta 17.0 km (+$2/km con lluvia)
+  if (km > config.baseKm && km <= 17.0) {
+    const baseAtCap = lookupUrbanRateByConfig(config, config.baseKm);
+    const surchargeAtCap = rainSurcharge(config.baseKm);
+    const basePriceWithRain = baseAtCap.price + surchargeAtCap;
+    const extraKm = km - config.baseKm;
+    const ratePerKmWithRain = config.ratePerKm + 2;
+    const totalPrice = Math.round(basePriceWithRain + extraKm * ratePerKmWithRain);
+
+    return {
+      price: totalPrice,
+      desc: `Tarifa ${config.label} con lluvia: $${basePriceWithRain} (base ${config.baseKm} km) + ${formatKm(extraKm)} km a $${ratePerKmWithRain}/km`
+    };
+  }
+
+  return null;
+}
+
+/**
  * Calcula la tarifa foránea para un km dado.
  * Retorna { price, name, desc } o null si no aplica.
  */
@@ -397,6 +495,12 @@ const divForanea = document.getElementById('divForanea');
 const badgeDay = document.getElementById('badgeDay');
 const badgeNight = document.getElementById('badgeNight');
 const badgeDawn = document.getElementById('badgeDawn');
+
+// Elementos de tarjetas de lluvia
+const divLluvia = document.getElementById('divLluvia');
+const cardDayLluvia = document.getElementById('cardDayLluvia');
+const cardNightLluvia = document.getElementById('cardNightLluvia');
+const cardDawnLluvia = document.getElementById('cardDawnLluvia');
 
 // Escuchar cambios en el input
 input.addEventListener('input', calculate);
@@ -443,6 +547,16 @@ function calculate() {
     showCard(cardNight, 'priceNight', 'descNight', night);
     showCard(cardDawn, 'priceDawn', 'descDawn', dawn);
 
+    // Mostrar tarifas con recargo de lluvia (mismo rango 0–17 km)
+    const dayLluvia = lookupUrbanRateWithRain(urbanConfigs.day, km);
+    const nightLluvia = lookupUrbanRateWithRain(urbanConfigs.night, km);
+    const dawnLluvia = lookupUrbanRateWithRain(urbanConfigs.dawn, km);
+
+    divLluvia.classList.add('visible');
+    showCard(cardDayLluvia, 'priceDayLluvia', 'descDayLluvia', dayLluvia);
+    showCard(cardNightLluvia, 'priceNightLluvia', 'descNightLluvia', nightLluvia);
+    showCard(cardDawnLluvia, 'priceDawnLluvia', 'descDawnLluvia', dawnLluvia);
+
     // Ocultar foránea
     cardForanea.classList.remove('visible');
     divForanea.classList.remove('visible');
@@ -450,6 +564,10 @@ function calculate() {
 
   // ── Tarifas foráneas activas (17.01+ km): Urbanas quedan descartadas y tachadas ──
   if (km > 17.0) {
+    // El recargo de lluvia no aplica al foráneo: ocultar tarjetas de lluvia
+    divLluvia.classList.remove('visible');
+    [cardDayLluvia, cardNightLluvia, cardDawnLluvia].forEach(c => c.classList.remove('visible'));
+
     // 1. Mostrar la tarifa foránea aplicable
     const foranea = lookupForaneaRate(km);
     if (foranea) {
@@ -515,9 +633,10 @@ function showCard(card, priceId, descId, data) {
  * Oculta todas las tarjetas
  */
 function hideAll() {
-  [cardDay, cardNight, cardDawn, cardForanea].forEach(c => c.classList.remove('visible'));
+  [cardDay, cardNight, cardDawn, cardForanea, cardDayLluvia, cardNightLluvia, cardDawnLluvia].forEach(c => c.classList.remove('visible'));
   setCardsDiscardedState(false);
   divForanea.classList.remove('visible');
+  divLluvia.classList.remove('visible');
 }
 
 // ═════════════════════════════════════
