@@ -402,8 +402,11 @@ const badgeDawn = document.getElementById('badgeDawn');
 input.addEventListener('input', calculate);
 
 // Enfocar el campo de kilómetros automáticamente al abrir la app,
-// para que el usuario pueda escribir de inmediato sin tocar la pantalla
-input.focus();
+// para que el usuario pueda escribir de inmediato sin tocar la pantalla.
+// Nota: los navegadores móviles no abren el teclado sin un toque del
+// usuario, pero sí dejan el campo marcado como activo (borde resaltado),
+// así el primer toque en pantalla ya cae directo en este input.
+setTimeout(() => input.focus(), 0);
 
 function calculate() {
   const val = parseFloat(input.value);
