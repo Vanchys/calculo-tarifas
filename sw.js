@@ -1,5 +1,5 @@
 // Nombre de la versión del caché
-const CACHE_NAME = 'tarifas-cache-v1';
+const CACHE_NAME = 'tarifas-cache-v2';
 
 // Archivos para precargar y servir offline
 const ASSETS_TO_CACHE = [
