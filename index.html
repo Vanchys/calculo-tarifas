@@ -401,21 +401,21 @@ const badgeDawn = document.getElementById('badgeDawn');
 // Escuchar cambios en el input
 input.addEventListener('input', calculate);
 
-// Enfocar el campo de kilómetros automáticamente al abrir la app.
-// En modo standalone (PWA instalada, sin barra del navegador) algunos
-// sistemas sí respetan el foco automático con teclado incluido, a
-// diferencia de una pestaña normal del navegador. Se reintenta varias
-// veces porque justo al abrir la PWA el DOM puede tardar unos milisegundos
-// más en estar listo para recibir el foco.
+// Android/iOS no permiten abrir el teclado del sistema sin un toque
+// real del usuario en la pantalla (bloqueo de seguridad del propio
+// sistema operativo, no se puede evitar por código). Como alternativa,
+// el primer toque en CUALQUIER parte de la pantalla enfoca el campo de
+// kilómetros y abre su teclado, sin que el usuario tenga que apuntar
+// al recuadro exacto.
 function focusInput() {
-  input.focus({ preventScroll: true });
+  if (document.activeElement !== input) input.focus({ preventScroll: true });
 }
-focusInput();
-window.addEventListener('load', focusInput);
-window.addEventListener('pageshow', focusInput);
-setTimeout(focusInput, 100);
-setTimeout(focusInput, 300);
-setTimeout(focusInput, 600);
+
+document.addEventListener('pointerdown', (e) => {
+  // No interceptar toques sobre el propio input o el botón de instalar
+  if (e.target === input || e.target.closest('#installBtn')) return;
+  focusInput();
+}, { passive: true });
 
 function calculate() {
   const val = parseFloat(input.value);
