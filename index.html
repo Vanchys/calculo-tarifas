@@ -22,18 +22,32 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #0f1117;
       color: #e2e8f0;
+      padding: 12px 16px;
+      /* Columna de altura completa: el contenedor de abajo puede crecer
+         para ocupar el sobrante y así evitar el hueco vacío al final. */
+      display: flex;
+      flex-direction: column;
       min-height: 100vh;
-      padding: 10px 14px;
+      min-height: 100dvh;
     }
 
     /* ── Contenedor principal ── */
-    .container { max-width: 480px; margin: 0 auto; }
+    .container {
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
 
     h1 {
       text-align: center;
       font-size: 1.1rem;
       margin-bottom: 8px;
       color: #f8fafc;
+      flex: 0 0 auto;
     }
 
     /* ── Botón de instalación PWA ── */
@@ -51,6 +65,7 @@
       margin-bottom: 10px;
       text-align: center;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      flex: 0 0 auto;
     }
     .btn-install:active { transform: scale(0.98); }
 
@@ -58,8 +73,9 @@
     .input-group {
       background: #1a1d2e;
       border-radius: 12px;
-      padding: 10px 14px;
-      margin-bottom: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      flex: 0 0 auto;
     }
     .input-group label {
       display: block;
@@ -69,8 +85,8 @@
     }
     .input-group input {
       width: 100%;
-      padding: 8px;
-      font-size: 1.1rem;
+      padding: 10px;
+      font-size: 1.15rem;
       background: #0f1117;
       border: 1px solid #334155;
       border-radius: 8px;
@@ -80,15 +96,29 @@
     }
     .input-group input:focus { border-color: #60a5fa; }
 
-    /* ── Tarjetas de resultado ── */
-    .results { display: flex; flex-direction: column; gap: 5px; }
+    /* ── Tarjetas de resultado ──
+       Mientras hay 6 tarjetas urbanas (sin foránea), crecen (flex-grow) para
+       repartirse el espacio sobrante y no dejar hueco vacío al final.
+       Cuando aparece foránea (>17 km) se suman las tachadas y ya no caben:
+       ahí no se encogen (flex-shrink: 0) y la página simplemente hace scroll. */
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
 
     .card {
       border-radius: 10px;
-      padding: 7px 10px;
+      padding: 10px 14px;
       display: none; /* se muestra con JS */
+      flex: 1 0 auto;
+      flex-shrink: 0;
+      flex-direction: column;
+      justify-content: center;
     }
-    .card.visible { display: block; }
+    .card.visible { display: flex; }
 
     .card-day { background: linear-gradient(135deg, #1e3a5f, #1a2744); border-left: 4px solid #facc15; }
     .card-night { background: linear-gradient(135deg, #1e2a4a, #141c33); border-left: 4px solid #818cf8; }
@@ -111,7 +141,7 @@
       grid-template-columns: minmax(0, 1.1fr) 1fr 1fr;
       align-items: center;
       gap: 6px;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
     /* El encabezado de la tarjeta foránea conserva el diseño de una sola columna */
@@ -120,7 +150,7 @@
       justify-content: space-between;
     }
 
-    .card-title { font-size: 0.78rem; font-weight: 600; }
+    .card-title { font-size: 0.88rem; font-weight: 600; }
 
     /* Columna de precio: etiqueta pequeña arriba y monto centrado abajo */
     .price-col {
@@ -130,12 +160,12 @@
       line-height: 1.1;
     }
     .price-label {
-      font-size: 0.55rem;
+      font-size: 0.62rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: #94a3b8;
-      margin-bottom: 1px;
+      margin-bottom: 2px;
       white-space: nowrap;
     }
     /* El precio con lluvia va dentro de su propio recuadro azul, para que se
@@ -144,7 +174,7 @@
       background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.10));
       border: 1px solid rgba(56, 189, 248, 0.40);
       border-radius: 6px;
-      padding: 2px 5px;
+      padding: 3px 6px;
     }
     .price-col.rain .price-label { color: #7dd3fc; }
     .price-col.rain .card-price { color: #bae6fd; }
@@ -155,26 +185,26 @@
       border-color: rgba(148, 163, 184, 0.30);
     }
 
-    .card-price { font-size: 1.02rem; font-weight: 700; }
-    .card-desc { font-size: 0.62rem; color: #94a3b8; line-height: 1.25; }
+    .card-price { font-size: 1.2rem; font-weight: 700; }
+    .card-desc { font-size: 0.7rem; color: #94a3b8; line-height: 1.3; }
 
     /* Detalle del cálculo con lluvia, en el mismo tono celeste que su precio */
     .card-desc-rain {
-      font-size: 0.6rem;
+      font-size: 0.68rem;
       color: #7dd3fc;
-      line-height: 1.25;
-      margin-top: 1px;
+      line-height: 1.3;
+      margin-top: 2px;
       opacity: 0.85;
     }
 
-    /* En pantallas angostas se reducen aún más las tipografías para que quepan las 3 columnas */
+    /* En pantallas angostas se reducen un poco las tipografías para que quepan las 3 columnas */
     @media (max-width: 380px) {
-      .card { padding: 6px 8px; }
-      .card-title { font-size: 0.7rem; }
-      .card-price { font-size: 0.88rem; }
-      .price-label { font-size: 0.5rem; }
-      .price-col.rain { padding: 2px 3px; }
-      .card-desc, .card-desc-rain { font-size: 0.56rem; }
+      .card { padding: 8px 10px; }
+      .card-title { font-size: 0.78rem; }
+      .card-price { font-size: 1rem; }
+      .price-label { font-size: 0.56rem; }
+      .price-col.rain { padding: 2px 4px; }
+      .card-desc, .card-desc-rain { font-size: 0.6rem; }
     }
 
     /* ── Tarjetas descartadas / tachadas para cuando aplica foránea ── */
@@ -233,11 +263,12 @@
     /* ── Separador ── */
     .divider {
       text-align: center;
-      font-size: 0.68rem;
+      font-size: 0.72rem;
       color: #64748b;
       margin: 6px 0 3px;
       display: none;
       font-weight: 600;
+      flex: 0 0 auto; /* no crece como las tarjetas, solo ocupa su alto natural */
     }
     .divider.visible { display: block; }
 
@@ -252,7 +283,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🚕 Calculadora de Tarifas V3</h1>
+    <h1>🚕 Calculadora de Tarifas V4</h1>
 
     <!-- Botón para instalar PWA directamente -->
     <button id="installBtn" class="btn-install">📲 Instalar aplicación en el dispositivo</button>
