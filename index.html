@@ -95,24 +95,86 @@
     .card-dawn { background: linear-gradient(135deg, #2a1a3e, #1a1130); border-left: 4px solid #c084fc; }
     .card-foranea { background: linear-gradient(135deg, #1a3333, #112222); border-left: 4px solid #34d399; }
 
-    /* ── Tarjetas de tarifa con lluvia: mismo color base, borde punteado celeste ── */
-    .card-lluvia {
-      border-style: dashed;
+    /* ── Tarjetas de la modalidad Taxi: relleno amarillo taxi para diferenciarlas
+       del Ejecutivo. El borde izquierdo conserva el color del horario
+       (amarillo / índigo / morado) para seguir distinguiendo la franja. ── */
+    .card-taxi {
+      background: linear-gradient(135deg, #4a3b10, #2b2208);
+      border-left-style: dashed;
       border-left-width: 4px;
-      border-top: 1px dashed #38bdf8;
-      border-right: 1px dashed #38bdf8;
-      border-bottom: 1px dashed #38bdf8;
     }
 
+    /* ── Encabezado: título a la izquierda, precio normal al centro y
+       precio con lluvia en la columna derecha (donde antes iba el normal) ── */
     .card-header {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) 1fr 1fr;
       align-items: center;
+      gap: 6px;
       margin-bottom: 6px;
     }
+
+    /* El encabezado de la tarjeta foránea conserva el diseño de una sola columna */
+    .card-header.single {
+      display: flex;
+      justify-content: space-between;
+    }
+
     .card-title { font-size: 0.9rem; font-weight: 600; }
-    .card-price { font-size: 1.5rem; font-weight: 700; }
+
+    /* Columna de precio: etiqueta pequeña arriba y monto centrado abajo */
+    .price-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.1;
+    }
+    .price-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
+      margin-bottom: 3px;
+      white-space: nowrap;
+    }
+    /* El precio con lluvia va dentro de su propio recuadro azul, para que se
+       distinga del precio normal en cualquiera de las dos modalidades */
+    .price-col.rain {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.10));
+      border: 1px solid rgba(56, 189, 248, 0.40);
+      border-radius: 8px;
+      padding: 4px 6px;
+    }
+    .price-col.rain .price-label { color: #7dd3fc; }
+    .price-col.rain .card-price { color: #bae6fd; }
+
+    /* En tarjetas descartadas el recuadro azul se apaga junto con el resto */
+    .card.discarded .price-col.rain {
+      background: rgba(148, 163, 184, 0.10);
+      border-color: rgba(148, 163, 184, 0.30);
+    }
+
+    .card-price { font-size: 1.35rem; font-weight: 700; }
     .card-desc { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; }
+
+    /* Detalle del cálculo con lluvia, en el mismo tono celeste que su precio */
+    .card-desc-rain {
+      font-size: 0.72rem;
+      color: #7dd3fc;
+      line-height: 1.4;
+      margin-top: 3px;
+      opacity: 0.85;
+    }
+
+    /* En pantallas angostas se reducen las tipografías para que quepan las 3 columnas */
+    @media (max-width: 380px) {
+      .card { padding: 12px; }
+      .card-title { font-size: 0.8rem; }
+      .card-price { font-size: 1.1rem; }
+      .price-label { font-size: 0.55rem; }
+      .price-col.rain { padding: 3px 4px; }
+    }
 
     /* ── Tarjetas descartadas / tachadas para cuando aplica foránea ── */
     .card.discarded {
@@ -125,6 +187,7 @@
       text-decoration-color: #ef4444;
       color: #94a3b8;
     }
+    .card.discarded .price-col.rain .card-price { color: #94a3b8; }
     .card-badge {
       display: inline-block;
       font-size: 0.65rem;
@@ -144,6 +207,26 @@
       background: rgba(52, 211, 153, 0.2);
       color: #34d399;
       border: 1px solid rgba(52, 211, 153, 0.4);
+    }
+
+    /* ── Etiqueta de ahorro del Taxi frente al Ejecutivo de la misma franja ── */
+    .save-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+      background: rgba(52, 211, 153, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+    /* Sin ahorro: se apaga para que salte a la vista que cuesta lo mismo */
+    .save-badge.zero {
+      background: rgba(148, 163, 184, 0.15);
+      color: #94a3b8;
+      border-color: rgba(148, 163, 184, 0.30);
     }
 
     /* ── Separador ── */
@@ -183,31 +266,51 @@
     <div class="results" id="results">
       <p class="empty-msg" id="emptyMsg">Ingresa los kilómetros para calcular</p>
 
-      <!-- Tarjeta foránea (se muestra primero si supera 17 km) -->
-      <div class="card card-foranea" id="cardForanea">
-        <div class="card-header">
+      <!-- Tarjetas foráneas (se muestran primero si el viaje supera 17 km).
+           Cada modalidad tiene su propio $/km foráneo. -->
+      <div class="card card-foranea" id="cardForaneaEjecutivo">
+        <div class="card-header single">
           <div>
-            <span class="card-title">🛣️ <span id="foraneName">Foránea</span></span>
-            <span class="card-badge badge-active" id="badgeForanea">Tarifa Aplicable</span>
+            <span class="card-title">🛣️ 💼 <span id="foraneNameEjecutivo">Foránea</span></span>
+            <span class="card-badge badge-active" id="badgeForaneaEjecutivo">Tarifa Aplicable</span>
           </div>
-          <span class="card-price" id="priceForanea">—</span>
+          <span class="card-price" id="priceForaneaEjecutivo">—</span>
         </div>
-        <p class="card-desc" id="descForanea"></p>
+        <p class="card-desc" id="descForaneaEjecutivo"></p>
       </div>
 
-      <!-- Separador de estado -->
-      <div class="divider" id="divForanea">── Tarifas de ciudad / horario ──</div>
+      <div class="card card-foranea card-taxi" id="cardForaneaTaxi">
+        <div class="card-header single">
+          <div>
+            <span class="card-title">🛣️ 🚕 <span id="foraneNameTaxi">Foránea</span></span>
+            <span class="card-badge badge-active" id="badgeForaneaTaxi">Tarifa Aplicable</span>
+            <span class="save-badge" id="saveForaneaTaxi"></span>
+          </div>
+          <span class="card-price" id="priceForaneaTaxi">—</span>
+        </div>
+        <p class="card-desc" id="descForaneaTaxi"></p>
+      </div>
 
-      <!-- Tarjetas de tarifas urbanas (Día, Noche, Madrugada) -->
+      <!-- ── Bloque 1: tarifas de la modalidad Ejecutivo ── -->
+      <div class="divider" id="divEjecutivo">── 💼 Tarifas NaVu Ejecutivo ──</div>
+
       <div class="card card-day" id="cardDay">
         <div class="card-header">
           <div>
             <span class="card-title">🌞 Día</span>
             <span class="card-badge badge-discarded" id="badgeDay" style="display: none;">Descartada</span>
           </div>
-          <span class="card-price" id="priceDay">—</span>
+          <div class="price-col">
+            <span class="price-label">Normal</span>
+            <span class="card-price" id="priceDay">—</span>
+          </div>
+          <div class="price-col rain">
+            <span class="price-label">☔ Lluvia</span>
+            <span class="card-price" id="priceDayRain">—</span>
+          </div>
         </div>
         <p class="card-desc" id="descDay"></p>
+        <p class="card-desc-rain" id="descDayRain"></p>
       </div>
 
       <div class="card card-night" id="cardNight">
@@ -216,9 +319,17 @@
             <span class="card-title">🌙 Noche</span>
             <span class="card-badge badge-discarded" id="badgeNight" style="display: none;">Descartada</span>
           </div>
-          <span class="card-price" id="priceNight">—</span>
+          <div class="price-col">
+            <span class="price-label">Normal</span>
+            <span class="card-price" id="priceNight">—</span>
+          </div>
+          <div class="price-col rain">
+            <span class="price-label">☔ Lluvia</span>
+            <span class="card-price" id="priceNightRain">—</span>
+          </div>
         </div>
         <p class="card-desc" id="descNight"></p>
+        <p class="card-desc-rain" id="descNightRain"></p>
       </div>
 
       <div class="card card-dawn" id="cardDawn">
@@ -227,50 +338,87 @@
             <span class="card-title">🌌 Madrugada</span>
             <span class="card-badge badge-discarded" id="badgeDawn" style="display: none;">Descartada</span>
           </div>
-          <span class="card-price" id="priceDawn">—</span>
+          <div class="price-col">
+            <span class="price-label">Normal</span>
+            <span class="card-price" id="priceDawn">—</span>
+          </div>
+          <div class="price-col rain">
+            <span class="price-label">☔ Lluvia</span>
+            <span class="card-price" id="priceDawnRain">—</span>
+          </div>
         </div>
         <p class="card-desc" id="descDawn"></p>
+        <p class="card-desc-rain" id="descDawnRain"></p>
       </div>
 
-      <!-- Separador de tarifas con lluvia -->
-      <div class="divider" id="divLluvia">── ☔ Tarifas con lluvia ──</div>
+      <!-- ── Bloque 2: tarifas de la modalidad Taxi ── -->
+      <div class="divider" id="divTaxi">── 🚕 Tarifas NaVu Taxi ──</div>
 
-      <!-- Tarjetas de tarifas con recargo de lluvia (Día, Noche, Madrugada) -->
-      <div class="card card-day card-lluvia" id="cardDayLluvia">
+      <div class="card card-day card-taxi" id="cardTaxiDay">
         <div class="card-header">
           <div>
-            <span class="card-title">☔🌞 Día con lluvia</span>
+            <span class="card-title">🌞 Día</span>
+            <span class="card-badge badge-discarded" id="badgeTaxiDay" style="display: none;">Descartada</span>
+            <span class="save-badge" id="saveTaxiDay"></span>
           </div>
-          <span class="card-price" id="priceDayLluvia">—</span>
+          <div class="price-col">
+            <span class="price-label">Normal</span>
+            <span class="card-price" id="priceTaxiDay">—</span>
+          </div>
+          <div class="price-col rain">
+            <span class="price-label">☔ Lluvia</span>
+            <span class="card-price" id="priceTaxiDayRain">—</span>
+          </div>
         </div>
-        <p class="card-desc" id="descDayLluvia"></p>
+        <p class="card-desc" id="descTaxiDay"></p>
+        <p class="card-desc-rain" id="descTaxiDayRain"></p>
       </div>
 
-      <div class="card card-night card-lluvia" id="cardNightLluvia">
+      <div class="card card-night card-taxi" id="cardTaxiNight">
         <div class="card-header">
           <div>
-            <span class="card-title">☔🌙 Noche con lluvia</span>
+            <span class="card-title">🌙 Noche</span>
+            <span class="card-badge badge-discarded" id="badgeTaxiNight" style="display: none;">Descartada</span>
+            <span class="save-badge" id="saveTaxiNight"></span>
           </div>
-          <span class="card-price" id="priceNightLluvia">—</span>
+          <div class="price-col">
+            <span class="price-label">Normal</span>
+            <span class="card-price" id="priceTaxiNight">—</span>
+          </div>
+          <div class="price-col rain">
+            <span class="price-label">☔ Lluvia</span>
+            <span class="card-price" id="priceTaxiNightRain">—</span>
+          </div>
         </div>
-        <p class="card-desc" id="descNightLluvia"></p>
+        <p class="card-desc" id="descTaxiNight"></p>
+        <p class="card-desc-rain" id="descTaxiNightRain"></p>
       </div>
 
-      <div class="card card-dawn card-lluvia" id="cardDawnLluvia">
+      <div class="card card-dawn card-taxi" id="cardTaxiDawn">
         <div class="card-header">
           <div>
-            <span class="card-title">☔🌌 Madrugada con lluvia</span>
+            <span class="card-title">🌌 Madrugada</span>
+            <span class="card-badge badge-discarded" id="badgeTaxiDawn" style="display: none;">Descartada</span>
+            <span class="save-badge" id="saveTaxiDawn"></span>
           </div>
-          <span class="card-price" id="priceDawnLluvia">—</span>
+          <div class="price-col">
+            <span class="price-label">Normal</span>
+            <span class="card-price" id="priceTaxiDawn">—</span>
+          </div>
+          <div class="price-col rain">
+            <span class="price-label">☔ Lluvia</span>
+            <span class="card-price" id="priceTaxiDawnRain">—</span>
+          </div>
         </div>
-        <p class="card-desc" id="descDawnLluvia"></p>
+        <p class="card-desc" id="descTaxiDawn"></p>
+        <p class="card-desc-rain" id="descTaxiDawnRain"></p>
       </div>
     </div>
   </div>
 
 <script>
-// ── Configuración de tarifas fijas y puntos de calibración continua ──
-const urbanConfigs = {
+// ── Configuración de tarifas de la modalidad Ejecutivo NaVu ──
+const executiveConfigs = {
   day: {
     label: 'día',
     subMinPrice: 34,
@@ -325,13 +473,97 @@ const urbanConfigs = {
   }
 };
 
+/**
+ * Genera los puntos [km, precio] del tramo escalonado, desde el kilómetro
+ * donde termina el mínimo estándar hasta el tope base de la franja.
+ * El precio sube de forma lineal a razón de `rampRatePerKm` por kilómetro.
+ */
+function buildRampPoints(startKm, startPrice, endKm, rampRatePerKm) {
+  const points = [];
+  const steps = Math.round((endKm - startKm) * 10);
+  for (let i = 0; i <= steps; i++) {
+    const km = Number((startKm + i * 0.1).toFixed(1));
+    points.push([km, startPrice + (km - startKm) * rampRatePerKm]);
+  }
+  return points;
+}
+
+/**
+ * Construye la configuración de una franja del Taxi a partir de los tres
+ * parámetros que definen un escenario: dónde termina el mínimo estándar,
+ * qué tan rápido sube el tramo escalonado y cuánto cuesta el kilómetro
+ * una vez pasado el tope base.
+ *
+ * El tope base no se elige a mano: es el punto donde la línea del tramo
+ * escalonado se cruza con la recta `km × $/km`. De ahí en adelante manda
+ * el precio por kilómetro.
+ */
+function buildTaxiConfig(label, subMinPrice, subMinMaxKm, stdMinPrice, stdMinMaxKm, rampRatePerKm, ratePerKm) {
+  const crossKm = (stdMinPrice - stdMinMaxKm * rampRatePerKm) / (ratePerKm - rampRatePerKm);
+  const baseKm = Math.round(crossKm * 10) / 10;
+  const basePrice = Math.round(stdMinPrice + (baseKm - stdMinMaxKm) * rampRatePerKm);
+
+  return {
+    label,
+    subMinPrice,
+    subMinMaxKm,
+    stdMinPrice,
+    stdMinMaxKm,
+    baseKm,
+    basePrice,
+    ratePerKm,
+    points: buildRampPoints(stdMinMaxKm, stdMinPrice, baseKm, rampRatePerKm)
+  };
+}
+
+// ── Configuración de tarifas de la modalidad Taxi NaVu ──
+// Los precios del sub-mínimo y del mínimo estándar son los mismos del
+// Ejecutivo (no se tocan). La modalidad Taxi se abarata frente al
+// Ejecutivo desde antes de llegar al cobro por kilómetro, con estos
+// ajustes decididos por el fundador el 22-sep-2026 (regla "D" del
+// comparativo de escenarios, más el ajuste de rangos del 22-sep-2026):
+//   1. El sub-mínimo cubre hasta 1.5 km en vez de 1.3 km.
+//   2. El mínimo estándar cubre hasta 2.0 km en vez de 1.7 km.
+//   3. El precio por kilómetro de Día baja de $13 a $12/km (Noche y
+//      Madrugada ya tenían su propio $/km más bajo: $14 y $16).
+// Con esto el Taxi nunca vuelve a costar exactamente igual que el
+// Ejecutivo, ni siquiera en los viajes largos que llegan al km 17.
+const taxiMinimums = {
+  day:   { label: 'día',       subMinPrice: 34, stdMinPrice: 39, ratePerKm: 12 },
+  night: { label: 'noche',     subMinPrice: 37, stdMinPrice: 42, ratePerKm: 14 },
+  dawn:  { label: 'madrugada', subMinPrice: 40, stdMinPrice: 45, ratePerKm: 16 }
+};
+const TAXI_SUB_MIN_MAX_KM = 1.5; // hasta dónde llega el sub-mínimo en Taxi
+const TAXI_STD_MIN_MAX_KM = 2.0; // hasta dónde llega el mínimo estándar en Taxi
+const TAXI_RAMP_RATE_PER_KM = 10; // $/km del tramo escalonado, igual que el Ejecutivo
+
+const taxiConfigs = {};
+Object.keys(taxiMinimums).forEach((franja) => {
+  const min = taxiMinimums[franja];
+  taxiConfigs[franja] = buildTaxiConfig(
+    min.label, min.subMinPrice, TAXI_SUB_MIN_MAX_KM, min.stdMinPrice,
+    TAXI_STD_MIN_MAX_KM, TAXI_RAMP_RATE_PER_KM, min.ratePerKm
+  );
+});
+
 // ── Tarifas foráneas: a partir de 17.01 km, precio fijo por km ──
-const foraneaRanges = [
-  { name: 'Tarifa foránea 1', min: 17.01, max: 25.9,  pricePerKm: 15 },
-  { name: 'Tarifa foránea 2', min: 26,    max: 69.9,  pricePerKm: 14 },
-  { name: 'Tarifa foránea 3', min: 70,    max: 139.9, pricePerKm: 13 },
-  { name: 'Tarifa foránea 4', min: 140,   max: 200,   pricePerKm: 12 }
-];
+// El Ejecutivo mantiene los cuatro rangos originales. El Taxi es −$1/km en
+// cada rango, decisión del 22-sep-2026 (antes el foráneo era idéntico en
+// las dos modalidades por decisión del fundador; ver Tarifas Modalidad Taxi.md).
+const foraneaRangesByModality = {
+  executive: [
+    { name: 'Tarifa foránea 1', min: 17.01, max: 25.9,  pricePerKm: 15 },
+    { name: 'Tarifa foránea 2', min: 26,    max: 69.9,  pricePerKm: 14 },
+    { name: 'Tarifa foránea 3', min: 70,    max: 139.9, pricePerKm: 13 },
+    { name: 'Tarifa foránea 4', min: 140,   max: 200,   pricePerKm: 12 }
+  ],
+  taxi: [
+    { name: 'Tarifa foránea 1', min: 17.01, max: 25.9,  pricePerKm: 14 },
+    { name: 'Tarifa foránea 2', min: 26,    max: 69.9,  pricePerKm: 13 },
+    { name: 'Tarifa foránea 3', min: 70,    max: 139.9, pricePerKm: 12 },
+    { name: 'Tarifa foránea 4', min: 140,   max: 200,   pricePerKm: 11 }
+  ]
+};
 
 
 // ═════════════════════════════════════
@@ -349,19 +581,26 @@ function formatKm(km) {
  * Calcula la tarifa urbana continua de 0.0 a 17.0 km con interpolación peso a peso
  */
 function lookupUrbanRateByConfig(config, km) {
-  // 1. Sub-mínimo (0.0 - 1.30 km)
-  if (km <= 1.3) {
+  // Hasta dónde llega el sub-mínimo y el mínimo estándar. El Ejecutivo
+  // siempre cierra en 1.3 km y 1.7 km; el Taxi los extiende (1.5 km y
+  // 2.0 km) sin cambiar sus precios.
+  const subMinMaxKm = config.subMinMaxKm || 1.3;
+  const stdMinMaxKm = config.stdMinMaxKm || 1.7;
+  const stdMinStartKm = Number((subMinMaxKm + 0.01).toFixed(2));
+
+  // 1. Sub-mínimo (0.0 km hasta su tope)
+  if (km <= subMinMaxKm) {
     return {
       price: config.subMinPrice,
-      desc: `Sub-mínimo (0.0 – 1.3 km)`
+      desc: `Sub-mínimo (0.0 – ${subMinMaxKm} km)`
     };
   }
 
-  // 2. Mínimo estándar (1.31 - 1.70 km)
-  if (km <= 1.7) {
+  // 2. Mínimo estándar (justo después del sub-mínimo hasta el tope del mínimo)
+  if (km <= stdMinMaxKm) {
     return {
       price: config.stdMinPrice,
-      desc: `Mínimo estándar (1.31 – 1.7 km)`
+      desc: `Mínimo estándar (${stdMinStartKm} – ${stdMinMaxKm} km)`
     };
   }
 
@@ -399,37 +638,57 @@ function lookupUrbanRateByConfig(config, km) {
 
 /**
  * Calcula el precio de un horario urbano con el recargo por lluvia aplicado.
- * Reglas acordadas: sub-mínimo +$3, mínimo estándar +$4, y desde 1.7 km
- * en adelante (tabla fija y cálculo por km) +$1 cada 0.5 km acumulado
- * desde 1.7 km, equivalente a +$2/km. Solo aplica de 0 a 17 km: a partir
- * de ahí ya no hay tarifas de ciudad y el foráneo no tiene recargo.
+ * Reglas acordadas: sub-mínimo +$3, mínimo estándar +$4, y desde el tope
+ * del mínimo en adelante (tabla fija y cálculo por km) +$1 cada 0.5 km
+ * acumulado desde ese tope, equivalente a +$2/km. Solo aplica de 0 a 17 km:
+ * a partir de ahí ya no hay tarifas de ciudad y el foráneo no tiene recargo.
+ *
+ * El tope del sub-mínimo y del mínimo se toman de `config.subMinMaxKm` y
+ * `config.stdMinMaxKm` (1.3/1.7 km en el Ejecutivo, 1.5/2.0 km en el Taxi)
+ * para que el recargo arranque siempre justo después del mínimo estándar
+ * de esa modalidad, sin importar dónde termine.
  */
 function lookupUrbanRateWithRain(config, km) {
-  // 1. Sub-mínimo (0.0 - 1.3 km)
-  if (km <= 1.3) {
+  const subMinMaxKm = config.subMinMaxKm || 1.3;
+  const stdMinMaxKm = config.stdMinMaxKm || 1.7;
+  const stdMinStartKm = Number((subMinMaxKm + 0.01).toFixed(2));
+
+  // 1. Sub-mínimo (0.0 km hasta su tope)
+  if (km <= subMinMaxKm) {
     return {
       price: config.subMinPrice + 3,
-      desc: `Sub-mínimo (0.0 – 1.3 km) + $3 lluvia`
+      desc: `Sub-mínimo (0.0 – ${subMinMaxKm} km) + $3 lluvia`
     };
   }
 
-  // 2. Mínimo estándar (1.31 - 1.7 km)
-  if (km <= 1.7) {
+  // 2. Mínimo estándar (justo después del sub-mínimo hasta el tope del mínimo)
+  if (km <= stdMinMaxKm) {
     return {
       price: config.stdMinPrice + 4,
-      desc: `Mínimo estándar (1.31 – 1.7 km) + $4 lluvia`
+      desc: `Mínimo estándar (${stdMinStartKm} – ${stdMinMaxKm} km) + $4 lluvia`
     };
   }
 
-  // Recargo acumulado: +$1 cada 0.5 km desde 1.7 km (mismo peso en tabla y por-km)
-  const rainSurcharge = (kmValue) => Math.floor((kmValue - 1.7) / 0.5 + 1e-9) + 1;
+  // Recargo acumulado: +$1 cada 0.5 km desde el tope del mínimo (mismo peso en tabla y por-km)
+  const rainSurcharge = (kmValue) => Math.floor((kmValue - stdMinMaxKm) / 0.5 + 1e-9) + 1;
 
-  // 3. Tabla fija continua con interpolación (1.7 km hasta baseKm)
+  // 3. Tabla fija continua con interpolación (tope del mínimo hasta baseKm)
   if (km <= config.baseKm) {
     const base = lookupUrbanRateByConfig(config, km);
     const surcharge = rainSurcharge(km);
+
+    // Candado de monotonía: el precio con lluvia nunca puede bajar del
+    // mínimo estándar con lluvia. Justo después del tope del mínimo, el
+    // recargo de "+$1 cada 0.5 km" arranca en $1 mientras la tabla normal
+    // ya venía subiendo $1 cada 0.1 km, así que sin este candado el precio
+    // con lluvia bajaría un par de celdas antes de volver a subir. Se
+    // sostiene en el precio del mínimo con lluvia hasta que la propia
+    // rampa lo supere de forma natural.
+    const rainFloor = config.stdMinPrice + 4;
+    const price = Math.max(base.price + surcharge, rainFloor);
+
     return {
-      price: base.price + surcharge,
+      price,
       desc: `Tarifa ${config.label} (tabla fija a ${formatKm(km)} km) + $${surcharge} lluvia`
     };
   }
@@ -453,11 +712,13 @@ function lookupUrbanRateWithRain(config, km) {
 }
 
 /**
- * Calcula la tarifa foránea para un km dado.
+ * Calcula la tarifa foránea para un km dado, según la modalidad ('executive' o 'taxi').
  * Retorna { price, name, desc } o null si no aplica.
  */
-function lookupForaneaRate(km) {
-  for (const range of foraneaRanges) {
+function lookupForaneaRate(km, modality) {
+  const ranges = foraneaRangesByModality[modality];
+
+  for (const range of ranges) {
     if (km >= range.min && km <= range.max) {
       const total = Math.round(km * range.pricePerKm);
       return {
@@ -467,12 +728,13 @@ function lookupForaneaRate(km) {
       };
     }
   }
-  // Fuera de rango (más de 200 km)
+  // Fuera de rango (más de 200 km): se estima con el $/km del último rango
   if (km > 200) {
+    const lastRange = ranges[ranges.length - 1];
     return {
-      price: Math.round(km * 12),
+      price: Math.round(km * lastRange.pricePerKm),
       name: 'Fuera de rango',
-      desc: `Más de 200 km. Se estima con $12/km (Tarifa foránea 4)`
+      desc: `Más de 200 km. Se estima con $${lastRange.pricePerKm}/km (${lastRange.name})`
     };
   }
   return null;
@@ -486,21 +748,48 @@ function lookupForaneaRate(km) {
 const input = document.getElementById('kmInput');
 const emptyMsg = document.getElementById('emptyMsg');
 
-// Elementos de tarjetas
-const cardDay = document.getElementById('cardDay');
-const cardNight = document.getElementById('cardNight');
-const cardDawn = document.getElementById('cardDawn');
-const cardForanea = document.getElementById('cardForanea');
-const divForanea = document.getElementById('divForanea');
-const badgeDay = document.getElementById('badgeDay');
-const badgeNight = document.getElementById('badgeNight');
-const badgeDawn = document.getElementById('badgeDawn');
+// Tarjetas foráneas (una por modalidad) y separadores de cada bloque
+const foraneaCards = {
+  executive: {
+    el: document.getElementById('cardForaneaEjecutivo'),
+    nameEl: document.getElementById('foraneNameEjecutivo'),
+    priceEl: document.getElementById('priceForaneaEjecutivo'),
+    descEl: document.getElementById('descForaneaEjecutivo')
+  },
+  taxi: {
+    el: document.getElementById('cardForaneaTaxi'),
+    nameEl: document.getElementById('foraneNameTaxi'),
+    priceEl: document.getElementById('priceForaneaTaxi'),
+    descEl: document.getElementById('descForaneaTaxi'),
+    saveEl: document.getElementById('saveForaneaTaxi')
+  }
+};
+const divEjecutivo = document.getElementById('divEjecutivo');
+const divTaxi = document.getElementById('divTaxi');
 
-// Elementos de tarjetas de lluvia
-const divLluvia = document.getElementById('divLluvia');
-const cardDayLluvia = document.getElementById('cardDayLluvia');
-const cardNightLluvia = document.getElementById('cardNightLluvia');
-const cardDawnLluvia = document.getElementById('cardDawnLluvia');
+// Cada tarjeta declara su franja, su modalidad y qué elementos del DOM
+// actualiza: precio normal, precio con lluvia, textos y etiqueta de ahorro
+const rateCards = [
+  { cardId: 'cardDay',       franja: 'day',   modality: 'executive' },
+  { cardId: 'cardNight',     franja: 'night', modality: 'executive' },
+  { cardId: 'cardDawn',      franja: 'dawn',  modality: 'executive' },
+  { cardId: 'cardTaxiDay',   franja: 'day',   modality: 'taxi' },
+  { cardId: 'cardTaxiNight', franja: 'night', modality: 'taxi' },
+  { cardId: 'cardTaxiDawn',  franja: 'dawn',  modality: 'taxi' }
+].map((card) => {
+  // Los ids del DOM se derivan del id de la tarjeta: cardTaxiDay -> priceTaxiDay
+  const key = card.cardId.replace('card', '');
+  return {
+    ...card,
+    el: document.getElementById(card.cardId),
+    badgeEl: document.getElementById('badge' + key),
+    saveEl: document.getElementById('save' + key),
+    priceEl: document.getElementById('price' + key),
+    rainPriceEl: document.getElementById('price' + key + 'Rain'),
+    descEl: document.getElementById('desc' + key),
+    rainDescEl: document.getElementById('desc' + key + 'Rain')
+  };
+});
 
 // Escuchar cambios en el input
 input.addEventListener('input', calculate);
@@ -534,109 +823,143 @@ function calculate() {
   emptyMsg.style.display = 'none';
   const km = val;
 
-  // ── Tarifas urbanas activas (0 – 17 km) ──
-  if (km <= 17.0) {
-    const day = lookupUrbanRateByConfig(urbanConfigs.day, km);
-    const night = lookupUrbanRateByConfig(urbanConfigs.night, km);
-    const dawn = lookupUrbanRateByConfig(urbanConfigs.dawn, km);
+  // A partir de 17.01 km rige el tarifario foráneo: las tarifas de ciudad
+  // se siguen mostrando pero tachadas, congeladas en su valor del km 17
+  const isForanea = km > 17.0;
+  const cityKm = isForanea ? 17.0 : km;
 
-    // Quitar estado descartado
-    setCardsDiscardedState(false);
+  renderDividers(isForanea);
+  setCardsDiscardedState(isForanea);
 
-    showCard(cardDay, 'priceDay', 'descDay', day);
-    showCard(cardNight, 'priceNight', 'descNight', night);
-    showCard(cardDawn, 'priceDawn', 'descDawn', dawn);
+  // Paso 1: el Ejecutivo. Su precio normal queda guardado porque es la
+  // referencia contra la que se mide el ahorro del Taxi (badge "ahorra $X")
+  const executiveNormalPrices = {};
+  rateCards.filter((card) => card.modality === 'executive').forEach((card) => {
+    const config = executiveConfigs[card.franja];
+    const normal = lookupUrbanRateByConfig(config, cityKm);
+    const rain = lookupUrbanRateWithRain(config, cityKm);
+    executiveNormalPrices[card.franja] = normal.price;
+    renderRateCard(card, applyForaneaNotice(normal, rain, isForanea));
+  });
 
-    // Mostrar tarifas con recargo de lluvia (mismo rango 0–17 km)
-    const dayLluvia = lookupUrbanRateWithRain(urbanConfigs.day, km);
-    const nightLluvia = lookupUrbanRateWithRain(urbanConfigs.night, km);
-    const dawnLluvia = lookupUrbanRateWithRain(urbanConfigs.dawn, km);
+  // Paso 2: el Taxi, con su propio tarifario (regla D) y su propio cálculo
+  // de lluvia (mismo criterio y fórmula que el Ejecutivo: +$1 cada 0.5 km,
+  // con el candado de monotonía). Antes el recargo se "importaba" del
+  // Ejecutivo en el mismo km, pero eso dejó de funcionar al extender el
+  // sub-mínimo y el mínimo de Taxi: en 1.8–2.1 km el Ejecutivo ya está en
+  // su propio tramo escalonado mientras el Taxi sigue en su mínimo, así
+  // que el recargo importado rompía la monotonía del Taxi.
+  rateCards.filter((card) => card.modality === 'taxi').forEach((card) => {
+    const config = taxiConfigs[card.franja];
+    const normal = lookupUrbanRateByConfig(config, cityKm);
+    const rain = lookupUrbanRateWithRain(config, cityKm);
 
-    divLluvia.classList.add('visible');
-    showCard(cardDayLluvia, 'priceDayLluvia', 'descDayLluvia', dayLluvia);
-    showCard(cardNightLluvia, 'priceNightLluvia', 'descNightLluvia', nightLluvia);
-    showCard(cardDawnLluvia, 'priceDawnLluvia', 'descDawnLluvia', dawnLluvia);
+    renderSaveBadge(card, executiveNormalPrices[card.franja] - normal.price);
+    renderRateCard(card, applyForaneaNotice(normal, rain, isForanea));
+  });
 
-    // Ocultar foránea
-    cardForanea.classList.remove('visible');
-    divForanea.classList.remove('visible');
+  if (isForanea) {
+    const foraneaExec = lookupForaneaRate(km, 'executive');
+    const foraneaTaxi = lookupForaneaRate(km, 'taxi');
+    renderForanea('executive', foraneaExec);
+    renderForanea('taxi', foraneaTaxi, foraneaExec ? foraneaExec.price - foraneaTaxi.price : 0);
+  } else {
+    renderForanea('executive', null);
+    renderForanea('taxi', null);
+  }
+}
+
+/**
+ * Sustituye las descripciones por el aviso de descarte cuando aplica foránea
+ */
+function applyForaneaNotice(normal, rain, isForanea) {
+  if (isForanea) {
+    if (normal) normal.desc = 'Descartada: supera los 17 km. Aplica el tarifario foráneo fijo';
+    if (rain) rain.desc = 'El recargo por lluvia solo aplica hasta el km 17';
+  }
+  return { normal, rain };
+}
+
+/**
+ * Ajusta el texto de los separadores según aplique tarifa de ciudad o foránea
+ */
+function renderDividers(isForanea) {
+  divEjecutivo.classList.add('visible');
+  divTaxi.classList.add('visible');
+  divEjecutivo.textContent = isForanea
+    ? '── 💼 NaVu Ejecutivo (descartadas por > 17 km) ──'
+    : '── 💼 Tarifas NaVu Ejecutivo ──';
+  divTaxi.textContent = isForanea
+    ? '── 🚕 NaVu Taxi (descartadas por > 17 km) ──'
+    : '── 🚕 Tarifas NaVu Taxi ──';
+}
+
+/**
+ * Muestra u oculta la tarjeta de tarifa foránea de una modalidad.
+ * `saving` es opcional: solo la tarjeta de Taxi lo usa para mostrar
+ * cuánto ahorra frente al foráneo del Ejecutivo en ese mismo kilómetro.
+ */
+function renderForanea(modality, foranea, saving) {
+  const card = foraneaCards[modality];
+  if (!foranea) {
+    card.el.classList.remove('visible');
+    return;
+  }
+  card.el.classList.add('visible');
+  card.nameEl.textContent = foranea.name;
+  card.priceEl.textContent = `$${foranea.price}`;
+  card.descEl.textContent = foranea.desc;
+  if (card.saveEl) renderSaveBadge(card, saving);
+}
+
+/**
+ * Muestra cuánto ahorra esta tarjeta de Taxi frente al Ejecutivo del mismo horario
+ */
+function renderSaveBadge(card, saving) {
+  if (!card.saveEl) return;
+  card.saveEl.textContent = saving > 0 ? `ahorra $${saving}` : 'igual que Ejecutivo';
+  card.saveEl.classList.toggle('zero', saving <= 0);
+}
+
+/**
+ * Pinta una tarjeta de horario con su precio normal y su precio con lluvia
+ */
+function renderRateCard(card, rates) {
+  const normal = rates.normal;
+  const rain = rates.rain;
+
+  if (!normal) {
+    card.el.classList.remove('visible');
+    return;
   }
 
-  // ── Tarifas foráneas activas (17.01+ km): Urbanas quedan descartadas y tachadas ──
-  if (km > 17.0) {
-    // El recargo de lluvia no aplica al foráneo: ocultar tarjetas de lluvia
-    divLluvia.classList.remove('visible');
-    [cardDayLluvia, cardNightLluvia, cardDawnLluvia].forEach(c => c.classList.remove('visible'));
-
-    // 1. Mostrar la tarifa foránea aplicable
-    const foranea = lookupForaneaRate(km);
-    if (foranea) {
-      cardForanea.classList.add('visible');
-      divForanea.classList.add('visible');
-      divForanea.textContent = '── Tarifas urbanas (Descartadas por > 17 km) ──';
-      document.getElementById('foraneName').textContent = foranea.name;
-      document.getElementById('priceForanea').textContent = `$${foranea.price}`;
-      document.getElementById('descForanea').textContent = foranea.desc;
-    }
-
-    // 2. Marcar las tarifas de horario como descartadas / tachadas
-    setCardsDiscardedState(true);
-
-    const day17 = lookupUrbanRateByConfig(urbanConfigs.day, 17.0);
-    const night17 = lookupUrbanRateByConfig(urbanConfigs.night, 17.0);
-    const dawn17 = lookupUrbanRateByConfig(urbanConfigs.dawn, 17.0);
-
-    if (day17) day17.desc = `Descartada: Supera los 17 km. Aplica tarifario foráneo fijo`;
-    if (night17) night17.desc = `Descartada: Supera los 17 km. Aplica tarifario foráneo fijo`;
-    if (dawn17) dawn17.desc = `Descartada: Supera los 17 km. Aplica tarifario foráneo fijo`;
-
-    showCard(cardDay, 'priceDay', 'descDay', day17);
-    showCard(cardNight, 'priceNight', 'descNight', night17);
-    showCard(cardDawn, 'priceDawn', 'descDawn', dawn17);
-  }
+  card.el.classList.add('visible');
+  card.priceEl.textContent = `$${normal.price}`;
+  card.descEl.textContent = normal.desc;
+  card.rainPriceEl.textContent = rain ? `$${rain.price}` : '—';
+  card.rainDescEl.textContent = rain ? `☔ ${rain.desc}` : '';
 }
 
 /**
  * Activa o desactiva el estilo tachado/descartado en las tarjetas de horario
  */
 function setCardsDiscardedState(isDiscarded) {
-  const urbanCards = [cardDay, cardNight, cardDawn];
-  const badges = [badgeDay, badgeNight, badgeDawn];
-
-  urbanCards.forEach(card => {
-    if (isDiscarded) {
-      card.classList.add('discarded');
-    } else {
-      card.classList.remove('discarded');
-    }
-  });
-
-  badges.forEach(badge => {
-    badge.style.display = isDiscarded ? 'inline-block' : 'none';
+  rateCards.forEach((card) => {
+    card.el.classList.toggle('discarded', isDiscarded);
+    card.badgeEl.style.display = isDiscarded ? 'inline-block' : 'none';
   });
 }
 
 /**
- * Muestra una tarjeta con precio y descripción
- */
-function showCard(card, priceId, descId, data) {
-  if (data) {
-    card.classList.add('visible');
-    document.getElementById(priceId).textContent = `$${data.price}`;
-    document.getElementById(descId).textContent = data.desc;
-  } else {
-    card.classList.remove('visible');
-  }
-}
-
-/**
- * Oculta todas las tarjetas
+ * Oculta todas las tarjetas y separadores
  */
 function hideAll() {
-  [cardDay, cardNight, cardDawn, cardForanea, cardDayLluvia, cardNightLluvia, cardDawnLluvia].forEach(c => c.classList.remove('visible'));
+  rateCards.forEach((card) => card.el.classList.remove('visible'));
   setCardsDiscardedState(false);
-  divForanea.classList.remove('visible');
-  divLluvia.classList.remove('visible');
+  foraneaCards.executive.el.classList.remove('visible');
+  foraneaCards.taxi.el.classList.remove('visible');
+  divEjecutivo.classList.remove('visible');
+  divTaxi.classList.remove('visible');
 }
 
 // ═════════════════════════════════════
