@@ -23,7 +23,7 @@
       background: #0f1117;
       color: #e2e8f0;
       min-height: 100vh;
-      padding: 16px;
+      padding: 10px 14px;
     }
 
     /* ── Contenedor principal ── */
@@ -31,8 +31,8 @@
 
     h1 {
       text-align: center;
-      font-size: 1.4rem;
-      margin-bottom: 12px;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
       color: #f8fafc;
     }
 
@@ -43,12 +43,12 @@
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
       color: #ffffff;
       border: none;
-      padding: 10px 14px;
+      padding: 8px 12px;
       border-radius: 10px;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
-      margin-bottom: 16px;
+      margin-bottom: 10px;
       text-align: center;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
@@ -58,19 +58,19 @@
     .input-group {
       background: #1a1d2e;
       border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
     }
     .input-group label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       color: #94a3b8;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     .input-group input {
       width: 100%;
-      padding: 12px;
-      font-size: 1.3rem;
+      padding: 8px;
+      font-size: 1.1rem;
       background: #0f1117;
       border: 1px solid #334155;
       border-radius: 8px;
@@ -81,11 +81,11 @@
     .input-group input:focus { border-color: #60a5fa; }
 
     /* ── Tarjetas de resultado ── */
-    .results { display: flex; flex-direction: column; gap: 10px; }
+    .results { display: flex; flex-direction: column; gap: 5px; }
 
     .card {
-      border-radius: 12px;
-      padding: 14px 16px;
+      border-radius: 10px;
+      padding: 7px 10px;
       display: none; /* se muestra con JS */
     }
     .card.visible { display: block; }
@@ -111,7 +111,7 @@
       grid-template-columns: minmax(0, 1.1fr) 1fr 1fr;
       align-items: center;
       gap: 6px;
-      margin-bottom: 6px;
+      margin-bottom: 2px;
     }
 
     /* El encabezado de la tarjeta foránea conserva el diseño de una sola columna */
@@ -120,7 +120,7 @@
       justify-content: space-between;
     }
 
-    .card-title { font-size: 0.9rem; font-weight: 600; }
+    .card-title { font-size: 0.78rem; font-weight: 600; }
 
     /* Columna de precio: etiqueta pequeña arriba y monto centrado abajo */
     .price-col {
@@ -130,12 +130,12 @@
       line-height: 1.1;
     }
     .price-label {
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: #94a3b8;
-      margin-bottom: 3px;
+      margin-bottom: 1px;
       white-space: nowrap;
     }
     /* El precio con lluvia va dentro de su propio recuadro azul, para que se
@@ -143,8 +143,8 @@
     .price-col.rain {
       background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.10));
       border: 1px solid rgba(56, 189, 248, 0.40);
-      border-radius: 8px;
-      padding: 4px 6px;
+      border-radius: 6px;
+      padding: 2px 5px;
     }
     .price-col.rain .price-label { color: #7dd3fc; }
     .price-col.rain .card-price { color: #bae6fd; }
@@ -155,25 +155,26 @@
       border-color: rgba(148, 163, 184, 0.30);
     }
 
-    .card-price { font-size: 1.35rem; font-weight: 700; }
-    .card-desc { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; }
+    .card-price { font-size: 1.02rem; font-weight: 700; }
+    .card-desc { font-size: 0.62rem; color: #94a3b8; line-height: 1.25; }
 
     /* Detalle del cálculo con lluvia, en el mismo tono celeste que su precio */
     .card-desc-rain {
-      font-size: 0.72rem;
+      font-size: 0.6rem;
       color: #7dd3fc;
-      line-height: 1.4;
-      margin-top: 3px;
+      line-height: 1.25;
+      margin-top: 1px;
       opacity: 0.85;
     }
 
-    /* En pantallas angostas se reducen las tipografías para que quepan las 3 columnas */
+    /* En pantallas angostas se reducen aún más las tipografías para que quepan las 3 columnas */
     @media (max-width: 380px) {
-      .card { padding: 12px; }
-      .card-title { font-size: 0.8rem; }
-      .card-price { font-size: 1.1rem; }
-      .price-label { font-size: 0.55rem; }
-      .price-col.rain { padding: 3px 4px; }
+      .card { padding: 6px 8px; }
+      .card-title { font-size: 0.7rem; }
+      .card-price { font-size: 0.88rem; }
+      .price-label { font-size: 0.5rem; }
+      .price-col.rain { padding: 2px 3px; }
+      .card-desc, .card-desc-rain { font-size: 0.56rem; }
     }
 
     /* ── Tarjetas descartadas / tachadas para cuando aplica foránea ── */
@@ -232,9 +233,9 @@
     /* ── Separador ── */
     .divider {
       text-align: center;
-      font-size: 0.75rem;
+      font-size: 0.68rem;
       color: #64748b;
-      margin: 12px 0 6px;
+      margin: 6px 0 3px;
       display: none;
       font-weight: 600;
     }

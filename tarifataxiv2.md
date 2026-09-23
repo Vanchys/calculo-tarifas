@@ -1,14 +1,12 @@
 # Tarifario Final — Taxi NaVu v2
 
-Este documento es la fuente de verdad **vigente** del tarifario de la modalidad Taxi NaVu: tarifas de ciudad, tarifas con recargo de lluvia y tarifas foráneas. Refleja exactamente lo que calcula `index.html` hoy (objetos `taxiConfigs`, `foraneaRangesByModality.taxi`, funciones `lookupUrbanRateByConfig`, `lookupUrbanRateWithRain` y `lookupForaneaRate`).
-
-**Reemplaza, para efectos de precio, al tarifario de Taxi descrito en [Tarifas Modalidad Taxi.md](Tarifas%20Modalidad%20Taxi.md).** Ese documento marca varias de las cifras que aquí cambian como *"cifra final del fundador, que nadie corrija"* — las decisiones de este documento las tomó el usuario directamente en esta sesión (22-sep-2026), reabriendo esas cifras a propósito. Si `Tarifas Modalidad Taxi.md` sigue siendo la fuente de verdad del negocio, hay que sincronizarlo con este documento o marcarlo como superado.
+Este documento es la fuente de verdad **vigente** del tarifario de la modalidad Taxi NaVu: tarifas de ciudad, tarifas con recargo de lluvia y tarifas foráneas.
 
 ---
 
 ## 1. Qué cambió frente al tarifario anterior de Taxi
 
-| Parámetro | v1 (Tarifas Modalidad Taxi.md) | v2 (este documento, vigente) |
+| Parámetro |  (este documento, vigente) |
 |---|---|---|
 | Tope del sub-mínimo | 1.3 km | **1.5 km** |
 | Tope del mínimo estándar | 1.7 km | **2.0 km** |
@@ -733,10 +731,3 @@ Con las reglas de este documento, el Taxi nunca vuelve a costar lo mismo que el 
 | 17.0 | $289 | $272 | −$17 |
 
 ---
-
-## Fuente de la lógica
-
-- `index.html`: objetos `taxiConfigs`, `taxiMinimums`, `TAXI_SUB_MIN_MAX_KM`, `TAXI_STD_MIN_MAX_KM`, `TAXI_RAMP_RATE_PER_KM`, `foraneaRangesByModality.taxi`; funciones `buildTaxiConfig`, `lookupUrbanRateByConfig`, `lookupUrbanRateWithRain`, `lookupForaneaRate`.
-- `sw.js`: caché en `tarifas-cache-v13` (subir la versión cada vez que se edite el tarifario, para forzar refresco en dispositivos con la PWA instalada).
-- ⚠️ **Nada de este documento está desplegado todavía.** Los cambios de esta sesión (modalidad Taxi completa, regla D, foráneos, sub-mínimo/mínimo extendidos, candado de monotonía) existen solo en el `index.html` y `sw.js` locales — el usuario pidió explícitamente no hacer `git push` por ahora.
-- El tarifario del Ejecutivo **no se tocó** en ninguno de los cambios de este documento — sigue documentado en [TARIFAS.md](TARIFAS.md) y [TARIFAS_LLUVIA.md](TARIFAS_LLUVIA.md).
